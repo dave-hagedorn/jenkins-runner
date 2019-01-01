@@ -1,0 +1,207 @@
+{
+	"publisher": "dave-hagedorn",
+	"name": "jenkins-runner",
+	"displayName": "Jenkins Runner",
+	"description": "Develop and run Jenkins pipeline scripts from within vs code",
+	"version": "1.0.0",
+	"homepage": "https://github.com/dave-hagedorn/jenkins-runner/blob/master/README.md",
+	"icon":"images/icon.png",
+	"galleryBanner": {
+		"color": "#C80000",
+		"theme": "dark"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dave-hagedorn/jenkins-runner.git"
+	},
+	"bugs": {
+		"url": "https://github.com/dave-hagedorn/jenkins-runner/issues"
+	},
+	"license": "SEE LICENSE IN LICENSE.md",
+	"engines": {
+		"vscode": "^1.30.0"
+	},
+	"categories": [
+		"Other",
+		"Programming Languages"
+	],
+	"activationEvents": [
+		"onCommand:runPipelineScriptOnDefault",
+		"onCommand:runPipelineScriptOn",
+		"onCommand:showPipelineLog",
+		"onCommand:stopPipelineRun",
+		"onCommand:forgetCachedPasswords",
+		"workspaceContains:**/Jenkinsfile"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "stopPipelineRun",
+				"title": "Stop Pipeline Run",
+				"category": "Jenkins"
+			},
+			{
+				"command": "showPipelineLog",
+				"title": "Show Pipeline Log",
+				"category": "Jenkins"
+			},
+			{
+				"command": "runPipelineScriptOn",
+				"title": "Run Pipeline Script On...",
+				"category": "Jenkins"
+			},
+			{
+				"command": "runPipelineScriptOnDefault",
+				"title": "Run Pipeline Script On Default Job",
+				"category": "Jenkins"
+			},
+			{
+				"command": "forgetCachedPasswords",
+				"title": "Forget temporary passwords",
+				"category": "Jenkins"
+			}
+		],
+		"configuration": {
+			"title": "Jenkins",
+			"properties": {
+				"jenkins.hostConfigs": {
+					"type": "object",
+					"description": "Jenkins hosts and credentials",
+					"patternProperties": {
+						".+": {
+							"type": "object",
+							"required": [
+								"url"
+							],
+							"properties": {
+								"url": {
+									"description": "URL to Jenkins host",
+									"type": "string",
+									"format": "uri"
+								},
+								"user": {
+									"type": "string"
+								},
+								"password": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"default": {
+						"host-with-password": {
+							"url": "http://localhost:8090",
+							"user": "admin",
+							"password": "admin"
+						},
+						"host-prompt-for-password": {
+							"url": "http://server:8090",
+							"user": "admin"
+						},
+						"host-no-password": {
+							"url": "http://server-no-auth:8090"
+						}
+					}
+				},
+				"jenkins.jobs": {
+					"type": "object",
+					"description": "Jenkins jobs to run",
+					"patternProperties": {
+						".+": {
+							"type": "object",
+							"required": [
+								"runWith",
+								"name"
+							],
+							"properties": {
+								"isDefault": {
+									"type": "boolean"
+								},
+								"name": {
+									"description": "Name of Jenkins job to use when running script - ITS CONFIGURATION WILL BE REPLACED",
+									"type": "string"
+								},
+								"runWith": {
+									"oneOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "array",
+											"items": {
+												"type": "string"
+											}
+										}
+									]
+								},
+								"parameters": {
+									"type": "object",
+									"patternProperties": {
+										".+": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "boolean"
+												},
+												{
+													"type": "number"
+												},
+												{
+													"type": "integer"
+												}
+											]
+										}
+									}
+								}
+							}
+						}
+					},
+					"default": {
+						"test-1": {
+							"isDefault": true,
+							"runWith": "host-no-password",
+							"name": "pipeline-test",
+							"parameters": {
+								"first": 1,
+								"second": "2nd"
+							}
+						},
+						"test-2": {
+							"runWith": [
+								"host-with-password",
+								"host-prompt-for-password"
+							],
+							"name": "pipeline-test"
+						}
+					}
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"dependencies": {
+		"ajv": "6.9.1",
+		"jenkins": "0.23.0",
+		"object-assign-deep": "0.4.0",
+		"xml2js": "0.4.19"
+	},
+	"devDependencies": {
+		"typescript": "3.3.3",
+		"vscode": "1.1.25",
+		"tslint": "5.8.0",
+		"@types/node": "8.10.25",
+		"@types/mocha": "2.2.42",
+		"@types/object-path": "^0.11.0",
+		"ts-node": "7.0.1",
+		"@types/xml2js": "0.4.3"
+	}
+}
