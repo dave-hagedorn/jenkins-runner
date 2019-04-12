@@ -89,7 +89,7 @@ The jobs referenced by `jenkins-runner.jobs` must already exist on the Jenkins h
 
 The Jenkins user of the `hostConfig`(s) referenced by a job must have permission to configure and launch that job.
 
-## Launch Scripts
+## Run Pipeline Scripts
 
 Any open editor in VS Code can be launched as a Pipeline Job:
 

@@ -25,7 +25,6 @@ import Settings, { Job, HostConfig } from "./settings";
 import Jenkins from "./jenkins";
 import * as log from "./log";
 import Constants from "./constants";
-import { stringify } from "querystring";
 
 const cachedPasswords = new Map<string,string>();
 

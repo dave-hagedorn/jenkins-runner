@@ -24,11 +24,9 @@ const jenkins = require("jenkins");
 import * as url from "url";
 import * as xml2js from "xml2js";
 import * as util from "util";
-import { start } from "repl";
 import { GroovyError, parseGroovyErrors } from "./pipeline_error_parser";
 import * as log from "./log";
 import * as utils from "./utils";
-import { timingSafeEqual } from "crypto";
 
 const timeout = util.promisify(setTimeout);
 
