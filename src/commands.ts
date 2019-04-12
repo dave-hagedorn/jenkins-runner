@@ -25,6 +25,7 @@ import Settings, { Job, HostConfig } from "./settings";
 import Jenkins from "./jenkins";
 import * as log from "./log";
 import Constants from "./constants";
+import { stringify } from "querystring";
 
 const cachedPasswords = new Map<string,string>();
 
@@ -74,7 +75,7 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
         host = job.runWith[0];
     } else {
         let hostChoices = job.runWith.map(hostDescription);
-        let choice = await vscode.window.showQuickPick(hostChoices);
+        let choice = await vscode.window.showQuickPick(hostChoices, {placeHolder:`Pick host to run ${job.friendlyName} on`});
 
         if (undefined === choice) {
             return;
@@ -129,6 +130,7 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
         job.parameters
     );
 
+    diagnostics.clear();
     build.start();
 }
 
@@ -140,6 +142,8 @@ async function getJobs() {
             if ("Show Logs" === action) {
                 log.showPanel();
             }
+        } else if (jobs.size === 0) {
+            vscode.window.showErrorMessage("No jobs defined in settings.json")
         }
         return jobs;
     } catch(err) {
@@ -147,7 +151,7 @@ async function getJobs() {
         if ("Show Logs" === action) {
             log.showPanel();
         }
-        return [];
+        return new Map<string, Job>();
     }
 }
 
@@ -199,7 +203,7 @@ async function runPipelineScriptOn(textEditor: vscode.TextEditor) {
 
     let friendlyNames = jobs.map(job => `${job.friendlyName}`);
 
-    let picked = await vscode.window.showQuickPick(friendlyNames);
+    let picked = await vscode.window.showQuickPick(friendlyNames, {placeHolder: "Pick job to launch script on"});
 
     if (!picked) {
         return;

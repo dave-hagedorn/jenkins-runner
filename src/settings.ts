@@ -60,7 +60,7 @@ export interface Job {
 
 export default class Settings {
     private static config<T>(name: string): T|undefined {
-        let settings = vscode.workspace.getConfiguration("jenkins").inspect<T>(name);
+        let settings = vscode.workspace.getConfiguration("jenkins-runner").inspect<T>(name);
 
         if (settings === undefined) {
             return undefined;
@@ -68,7 +68,7 @@ export default class Settings {
 
         return objectAssignDeep(settings.globalValue, settings.workspaceValue, settings.workspaceFolderValue);
     }
-    private static readonly EXTENSION_NAME = "dave.hagedorn.jenkins-ide";
+    private static readonly EXTENSION_NAME = "dave-hagedorn.jenkins-runner";
 
     private static readonly compiledSchemas = new Map<string, ajv.ValidateFunction>();
 

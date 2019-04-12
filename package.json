@@ -39,35 +39,35 @@
 			{
 				"command": "stopPipelineRun",
 				"title": "Stop Pipeline Run",
-				"category": "Jenkins"
+				"category": "Jenkins Runner"
 			},
 			{
 				"command": "showPipelineLog",
 				"title": "Show Pipeline Log",
-				"category": "Jenkins"
+				"category": "Jenkins Runner"
 			},
 			{
 				"command": "runPipelineScriptOn",
 				"title": "Run Pipeline Script On...",
-				"category": "Jenkins"
+				"category": "Jenkins Runner"
 			},
 			{
 				"command": "runPipelineScriptOnDefault",
 				"title": "Run Pipeline Script On Default Job",
-				"category": "Jenkins"
+				"category": "Jenkins Runner"
 			},
 			{
 				"command": "forgetCachedPasswords",
 				"title": "Forget temporary passwords",
-				"category": "Jenkins"
+				"category": "Jenkins Runner"
 			}
 		],
 		"configuration": {
-			"title": "Jenkins",
+			"title": "Jenkins Runner",
 			"properties": {
-				"jenkins.hostConfigs": {
+				"jenkins-runner.hostConfigs": {
 					"type": "object",
-					"description": "Jenkins hosts and credentials",
+					"description": "Jenkins hosts and their credentials",
 					"patternProperties": {
 						".+": {
 							"type": "object",
@@ -76,14 +76,16 @@
 							],
 							"properties": {
 								"url": {
-									"description": "URL to Jenkins host",
+									"description": "URL to Jenkins host.  Required",
 									"type": "string",
 									"format": "uri"
 								},
 								"user": {
+									"description": "Username used to authenticate against this host.  Optional if not auth. needed",
 									"type": "string"
 								},
 								"password": {
+									"description": "Password used to authenticate against this host.  Optional.  If \"user\" is provided and this is blank, you will be prompted for the user's password",
 									"type": "string"
 								}
 							}
@@ -104,9 +106,9 @@
 						}
 					}
 				},
-				"jenkins.jobs": {
+				"jenkins-runner.jobs": {
 					"type": "object",
-					"description": "Jenkins jobs to run",
+					"description": "Jenkins jobs and configurations, used to run a script",
 					"patternProperties": {
 						".+": {
 							"type": "object",
@@ -116,13 +118,15 @@
 							],
 							"properties": {
 								"isDefault": {
-									"type": "boolean"
+									"type": "boolean",
+									"description": "If set, this job config will be chosen by the \"Run Pipeline Script On Default Job\" command.  Only one job config should set this"
 								},
 								"name": {
-									"description": "Name of Jenkins job to use when running script - ITS CONFIGURATION WILL BE REPLACED",
+									"description": "Name of the Jenkins job to use when running a script - ITS CONFIGURATION WILL BE REPLACED",
 									"type": "string"
 								},
 								"runWith": {
+									"description": "Host, or list of hosts this Jenkins job config can be run on.  Helpful if you have dev and prod. instances",
 									"oneOf": [
 										{
 											"type": "string"
@@ -136,6 +140,7 @@
 									]
 								},
 								"parameters": {
+									"description": "Map of parameters and their values to use when running this job.  Use for parameterized jobs",
 									"type": "object",
 									"patternProperties": {
 										".+": {

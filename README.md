@@ -1,66 +1,167 @@
-# <img src="images/icon.png" width=64> Jenkins Runner
+# <img src="images/icon.png" width=128 style="vertical-align:middle;"> Jenkins Runner
+
+Extension to run Jenkins Pipeline scripts from within VS Code
+
+![Sample Run](images/running.gif)
+
+Jenkins Runner can launch any opened file as the Jenkins Pipeline script (declarative or scripted) for a given Jenkins job/project.
 
 
-This is the README for your extension "jenkins-ide". After writing up a brief description, we recommend including the following sections.
+:warning::warning::warning:
 
-## Features
+The configuration of the Jenkins job used to run the script will be over-written by this extension.  Suggest using a scratch/test job.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+:warning::warning::warning:
 
-For example if there is an image subfolder under your extension project workspace:
+# Getting Started
 
-\!\[feature X\]\(images/feature-x.png\)
+## Add Jenkins Users and Hosts
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+The extensions needs to know which Jenkins host(s) you are going to launch jobs on - and the Jenkins user(s) you will use to do so.
 
-## Requirements
+These are configured through the `jenkins-runner.hostConfigs` property in user settings
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+This is a map of friendly names (used for VS Code menus/UI) to host configs:
 
-## Extension Settings
+```json
+"jenkins-runner.hostConfigs": {
+    "local": {
+        "url": "http://localhost:8090"
+    },
+    "local-secure": {
+        "url": "http://localhost:8090",
+        "user": "dave"
+    },
+    "master": {
+        "url": "http://jenkins.mycompany.com",
+        "user": "dave",
+        "password": "password"
+    }
+}
+```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+At a minimum, each hostConfig entry requires a `url` field.  This assumes a host with no authentication.
 
-For example:
+Assuming the host requires authentication, the `user` field is provided.  `password` supplies the user's password.
 
-This extension contributes the following settings:
+If `password` is omitted, you will be prompted once per user, per VS Code session, for that user's password.  This password is then cached until VS Code is closed, or until the `Forget temporary passwords` command is invoked.
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+## Add Jobs & Their Parameters
 
-## Known Issues
+The extension also needs to know which Jenkins job(s) you will use to actually run a Jenkins script.  These are configured through the `jenkins-runner.jobs` property in user settings.  This is a map of friendly names (used for VS Code menus/UI) to job configs:
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+:warning::warning::warning:
 
-## Release Notes
+The Jenkins-side configuration of a job will be over-written by this extension.  Suggest using a scratch/test job.
 
-Users appreciate release notes as you update your extension.
+:warning::warning::warning:
 
-### 1.0.0
+```json
+"jenkins-runner.jobs": {
+    "test 1 - defaults": {
+        "isDefault": true,
+        "runWith": ["local", "master"],
+        "name": "test-pipeline",
+    },
+    "test 1 - other params": {
+        "runWith": "local",
+        "name": "test-pipeline",
+        "parameters": {
+            "message": "Hello World!"
+        }
+    }
+}
+```
 
-Initial release of ...
+Each job entry requires:
 
-### 1.0.1
+* `runWith` - a name, or an array of names, from `jenkins-runner.hostConfigs`.  This is the host(s) this job exists on.  This is useful if you have, say, local dev and remote Jenkins instances
+* `name` - the name of the job as it is exists on the Jenkins host(s).  This job must already exist on the expected Jenkins host(s)
 
-Fixed issue #.
+The following field are optional:
 
-### 1.1.0
+* `isDefault` - this should be set for at most one job.  This job is used by the `Run Pipeline Script on Default Job` command.  This saves you needing to chose a job every time you want to run a script - as would be done when using the `Run Pipeline Script On...` command
+* `parameters` - a dictionary of the parameters configured for this job
 
-Added features X, Y, and Z.
+## Jenkins Setup
 
------------------------------------------------------------------------------------------------------------
+The jobs referenced by `jenkins-runner.jobs` must already exist on the Jenkins host(s) referenced by those jobs.  You or your Jenkins admin must do this step outside this extension.  These should be configured as a Pipeline Job.
 
-## Working with Markdown
+The Jenkins user of the `hostConfig`(s) referenced by a job must have permission to configure and launch that job.
 
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
+## Launch Scripts
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
+Any open editor in VS Code can be launched as a Pipeline Job:
 
-### For more information
+* `Run Pipeline Script On...` - shows a picker to chose the job config to use when launching the editor's contents as a Pipeline Job.  If this job has more than one host in its `runWith` field, you will also need to pick the host
+* `Run Pipeline Script On Default Job` - same as above, but automatically choses the job with `isDefault` set to true
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+The console output of a running job is shown in VS Code's output console, under `Jenkins Runner`, and an indicator is shown in the status bar.  Clicking this indicator will also show the output console.  The command `Show Pipeline Log` also shows this console.
 
-**Enjoy!**
+Any Groovy/Pipeline errors encountered during the run should be highlighted and reported in VS Code's Problems tab
+
+A running job can be stopped using the `Stop Pipeline Run` command.
+
+Any cached passwords can be reset/forgotten using the `Forget Temporary Passwords` command.
+
+Lastly, extension debug logs are written to the `Jenkins Runner - Debug Log` output console.
+
+# Features
+
+## Parameter Support
+
+Each job configuration supports arbitrary build parameters.
+
+![Parameters Config](images/parameters.png)
+
+You can add multiple job configurations to test a script against different sets of parameters
+
+## Multiple jobs & Hosts
+
+A script can be launched under any configured job...
+
+![Run Command](images/run-command.png)
+
+On any Jenkins host configured for that job
+
+![Run Command](images/run-command-2.png)
+
+This is helpful if you want to test a script against different jobs, or run a script against a job on both dev and production Jenkins instances.
+
+## Error Highlighting
+
+Compilation errors in your pipeline script are parsed from the Jenkins build output and shown in-line and in the Errors panel
+
+![Error Highlighting](images/errors.png)
+
+## Streaming Build Output
+
+As your build runs, the output is streamed to VS Code
+
+![Build Output](images/output.png)
+
+## Authentication
+
+If your Jenkins instance is secured, you can configure usernames and passwords in user settings.  If you don't want to store the password for a Jenkins user, you can leave it blank and will be prompted once per VS Code session, per user.
+
+![Password Prompt](images/password.png)
+
+![Forget Passwords](images/password-reset.png)
+
+## Build Control
+
+Long running builds can be stopped from within VS Code
+
+![Stop Build](images/build-control.png)
+
+# Known Issues
+
+* Compilation errors are highlighted at the starting line+column to the end of the same line
+  * The extension can determine where a compilation error starts but does not know where it ends, so assumes to the end of the current line
+* A max of one job can be running at any time (from within VS Code)
+  * The extension somewhat supports multiple jobs, but the UI and command handlers have not been updated to support this
+  * Is a consideration for future releases if there is interest
+
+# Release Notes
+
+See [CHANGELOG.md](CHANGELOG.md)
