@@ -1,4 +1,4 @@
-# <img src="images/icon.png" width=128 style="vertical-align:middle;"> Jenkins Runner
+# ![Icon](images/icon-small.png) Jenkins Runner
 
 Extension to run Jenkins Pipeline scripts from within VS Code
 
