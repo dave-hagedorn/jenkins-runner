@@ -5,7 +5,7 @@
 	"description": "Develop and run Jenkins pipeline scripts from within vs code",
 	"version": "1.0.0",
 	"homepage": "https://github.com/dave-hagedorn/jenkins-runner/blob/master/README.md",
-	"icon":"images/icon.png",
+	"icon": "images/icon.png",
 	"galleryBanner": {
 		"color": "#C80000",
 		"theme": "dark"
