@@ -4,6 +4,7 @@ out/test/**
 src/**
 .gitignore
 images/**
+!images/icon.png
 **/tsconfig.json
 **/tslint.json
 **/*.map
