@@ -97,6 +97,10 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
             cachedPasswords.set(host.friendlyName, tempPassword);
             jenkinsHost.updatePassword(tempPassword);
         }
+    } else {
+        // else, updatePassword still creates internal jenkins object
+        // TODO:  write some unit tests...
+        jenkinsHost.updatePassword(undefined);
     }
 
 

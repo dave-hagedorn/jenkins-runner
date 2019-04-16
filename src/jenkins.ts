@@ -74,7 +74,7 @@ export default class Jenkins {
     ) {
     }
 
-    public updatePassword(password: string) {
+    public updatePassword(password?: string) {
         let urlWithAuth = new url.URL(this.baseUrl);
 
         if (password !== undefined && this.user !== undefined) {
