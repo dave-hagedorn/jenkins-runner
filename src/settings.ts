@@ -31,6 +31,7 @@ export interface HostConfigRaw {
     url: string;
     user?: string;
     password?: string;
+    useCrumbIssuer?: boolean;
 }
 
 export interface HostConfig {
@@ -38,6 +39,7 @@ export interface HostConfig {
     url: string;
     user?: string;
     password?: string;
+    useCrumbIssuer: boolean;
 }
 
 interface JobRaw {
@@ -79,9 +81,10 @@ export default class Settings {
 
             let json = ext.packageJSON;
 
-            let schema = utils.atPath(json, "contributes", "configuration", "properties", `jenkins.${property}`);
+            let schema = utils.atPath(json, "contributes", "configuration", "properties", `jenkins-runner.${property}`);
 
             if (!schema) {
+                this.logger.error("Could not find settings schema in package.json ?!");
                 return;
             }
 
@@ -118,7 +121,7 @@ export default class Settings {
 
         return new Map(Object.entries(hosts).map( ([name, rawHost]): [string, HostConfig] => [
             name,
-            { friendlyName:name, ...rawHost }
+            { friendlyName:name, useCrumbIssuer:rawHost.useCrumbIssuer || true, ...rawHost }
         ]));
     }
 

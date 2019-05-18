@@ -83,7 +83,7 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
         host = job.runWith[hostChoices.indexOf(choice)];
     }
 
-    let jenkinsHost = Jenkins.getOrCreateHost(host.url, host.user);
+    let jenkinsHost = Jenkins.getOrCreateHost(host.url, host.user, host.useCrumbIssuer);
 
     if (host.password !== undefined) {
         jenkinsHost.updatePassword(host.password);

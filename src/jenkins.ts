@@ -44,11 +44,11 @@ export default class Jenkins {
 
     private static _hosts = new Map<string,Jenkins>();
 
-    public static getOrCreateHost(baseUrl: string, user?: string) {
+    public static getOrCreateHost(baseUrl: string, user?: string, useCrumbIssuer: boolean = true) {
         let key = `${baseUrl}-${user}`;
 
         if (!this._hosts.has(key)) {
-            this._hosts.set(key, new Jenkins(baseUrl, user));
+            this._hosts.set(key, new Jenkins(baseUrl, user, useCrumbIssuer));
         }
 
         return this._hosts.get(key) as Jenkins;
@@ -71,6 +71,7 @@ export default class Jenkins {
     private constructor(
         public readonly baseUrl: string,
         public readonly user?: string,
+        public readonly useCrumbIssuer: boolean = true,
     ) {
     }
 
@@ -90,7 +91,7 @@ export default class Jenkins {
 
         // don't log passwords!
         logger.info(`Creating Jenkins instance @url=${this.baseUrl}, with user=${this.user}, password=${password ? "****" : ""}`);
-        this.jenkinsInstance = jenkins({baseUrl: combinedUrl, promisify: true, crumbIssuer: true});
+        this.jenkinsInstance = jenkins({baseUrl: combinedUrl, promisify: true, crumbIssuer: this.useCrumbIssuer});
     }
 
     public async createPipelineBuild(

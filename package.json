@@ -87,6 +87,11 @@
 								"password": {
 									"description": "Password used to authenticate against this host.  Optional.  If \"user\" is provided and this is blank, you will be prompted for the user's password",
 									"type": "string"
+								},
+								"useCrumbIssuer": {
+									"description": "Defaults to true.  Use the crumbIssuer when authenticating.  ie, your Jenkins uses CSRF protection - https://wiki.jenkins.io/display/JENKINS/Remote+access+API",
+									"type": "boolean",
+									"default": true
 								}
 							}
 						}
@@ -95,7 +100,8 @@
 						"host-with-password": {
 							"url": "http://localhost:8090",
 							"user": "admin",
-							"password": "admin"
+							"password": "admin",
+							"useCrumbIssuer": false
 						},
 						"host-prompt-for-password": {
 							"url": "http://server:8090",
