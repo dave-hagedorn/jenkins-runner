@@ -32,6 +32,7 @@ export interface HostConfigRaw {
     user?: string;
     password?: string;
     useCrumbIssuer?: boolean;
+    rejectUnauthorizedCert?: boolean;
 }
 
 export interface HostConfig {
@@ -40,6 +41,7 @@ export interface HostConfig {
     user?: string;
     password?: string;
     useCrumbIssuer: boolean;
+    rejectUnauthorizedCert: boolean;
 }
 
 interface JobRaw {
@@ -121,7 +123,12 @@ export default class Settings {
 
         return new Map(Object.entries(hosts).map( ([name, rawHost]): [string, HostConfig] => [
             name,
-            { friendlyName:name, useCrumbIssuer:rawHost.useCrumbIssuer || true, ...rawHost }
+            {
+                friendlyName: name,
+                useCrumbIssuer: rawHost.useCrumbIssuer || true,
+                rejectUnauthorizedCert: rawHost.rejectUnauthorizedCert || true,
+                ...rawHost
+            },
         ]));
     }
 

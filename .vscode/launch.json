@@ -12,8 +12,8 @@
             "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [ "${workspaceRoot}/out/**/*.js" ]
-            //"preLaunchTask": "npm: watch"
+            "outFiles": [ "${workspaceRoot}/out/**/*.js" ],
+            "preLaunchTask": "npm: compile"
         }
     ]
 }

@@ -92,6 +92,11 @@
 									"description": "Defaults to true.  Use the crumbIssuer when authenticating.  ie, your Jenkins uses CSRF protection - https://wiki.jenkins.io/display/JENKINS/Remote+access+API",
 									"type": "boolean",
 									"default": true
+								},
+								"rejectUnauthorizedCert": {
+									"description": "Defaults to true.  Use for testing only - to avoid MITM attacks.  Set to false to ignore unauthorized or self-signed SSL certs when connecting (https://nodejs.org/dist/latest/docs/api/tls.html#tls_tls_connect_options_callback)",
+									"type": "boolean",
+									"default": false
 								}
 							}
 						}
@@ -101,7 +106,8 @@
 							"url": "http://localhost:8090",
 							"user": "admin",
 							"password": "admin",
-							"useCrumbIssuer": false
+							"useCrumbIssuer": false,
+							"rejectUnauthorizedCert": false
 						},
 						"host-prompt-for-password": {
 							"url": "http://server:8090",

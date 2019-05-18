@@ -83,10 +83,10 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
         host = job.runWith[hostChoices.indexOf(choice)];
     }
 
-    let jenkinsHost = Jenkins.getOrCreateHost(host.url, host.user, host.useCrumbIssuer);
+    let jenkinsHost = Jenkins.getOrCreateHost(host.url, host.user);
 
     if (host.password !== undefined) {
-        jenkinsHost.updatePassword(host.password);
+        jenkinsHost.updateCredentials(host.password);
     } else if (host.user !== undefined) {
         if (!cachedPasswords.has(host.friendlyName)) {
             let tempPassword = await vscode.window.showInputBox({prompt: `Password for ${hostDescription(host)}`, password: true});
@@ -95,12 +95,12 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
             }
 
             cachedPasswords.set(host.friendlyName, tempPassword);
-            jenkinsHost.updatePassword(tempPassword);
+            jenkinsHost.updateCredentials(tempPassword, host.useCrumbIssuer, host.rejectUnauthorizedCert);
         }
     } else {
         // else, updatePassword still creates internal jenkins object
         // TODO:  write some unit tests...
-        jenkinsHost.updatePassword(undefined);
+        jenkinsHost.updateCredentials(undefined, host.useCrumbIssuer, host.rejectUnauthorizedCert);
     }
 
 

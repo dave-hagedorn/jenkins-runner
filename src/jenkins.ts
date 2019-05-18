@@ -44,11 +44,11 @@ export default class Jenkins {
 
     private static _hosts = new Map<string,Jenkins>();
 
-    public static getOrCreateHost(baseUrl: string, user?: string, useCrumbIssuer: boolean = true) {
+    public static getOrCreateHost(baseUrl: string, user?: string) {
         let key = `${baseUrl}-${user}`;
 
         if (!this._hosts.has(key)) {
-            this._hosts.set(key, new Jenkins(baseUrl, user, useCrumbIssuer));
+            this._hosts.set(key, new Jenkins(baseUrl, user));
         }
 
         return this._hosts.get(key) as Jenkins;
@@ -70,12 +70,11 @@ export default class Jenkins {
 
     private constructor(
         public readonly baseUrl: string,
-        public readonly user?: string,
-        public readonly useCrumbIssuer: boolean = true,
+        public readonly user?: string
     ) {
     }
 
-    public updatePassword(password?: string) {
+    public updateCredentials(password?: string, useCrumbIssuer = true, rejectUnauthorizedCert = true) {
         let urlWithAuth = new url.URL(this.baseUrl);
 
         if (password !== undefined && this.user !== undefined) {
@@ -91,7 +90,12 @@ export default class Jenkins {
 
         // don't log passwords!
         logger.info(`Creating Jenkins instance @url=${this.baseUrl}, with user=${this.user}, password=${password ? "****" : ""}`);
-        this.jenkinsInstance = jenkins({baseUrl: combinedUrl, promisify: true, crumbIssuer: this.useCrumbIssuer});
+        this.jenkinsInstance = jenkins({
+            baseUrl: combinedUrl,
+            promisify: true,
+            crumbIssuer: useCrumbIssuer,
+            rejectUnauthorized: rejectUnauthorizedCert,
+        });
     }
 
     public async createPipelineBuild(
