@@ -7,7 +7,10 @@ Extension to run Jenkins Pipeline scripts from within VS Code
 Jenkins Runner can launch any opened file as the Jenkins Pipeline script (declarative or scripted) for a given Jenkins job/project.
 
 ⚠ ⚠ ⚠
-The configuration of the Jenkins job used to run the script will be over-written by this extension.  Suggest using a scratch/test job.
+
+The configuration of the Jenkins job used to run the script will be
+over-written by this extension.  Suggest using a scratch/test job.
+
 ⚠ ⚠ ⚠
 
 # Getting Started
@@ -48,7 +51,9 @@ If `password` is omitted, you will be prompted once per user, per VS Code sessio
 The extension also needs to know which Jenkins job(s) you will use to actually run a Jenkins script.  These are configured through the `jenkins-runner.jobs` property in user settings.  This is a map of friendly names (used for VS Code menus/UI) to job configs:
 
 ⚠ ⚠ ⚠
+
 The Jenkins-side configuration of a job will be over-written by this extension.  Suggest using a scratch/test job.
+
 ⚠ ⚠ ⚠
 
 ```json
