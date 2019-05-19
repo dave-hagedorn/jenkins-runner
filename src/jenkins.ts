@@ -74,7 +74,7 @@ export default class Jenkins {
     ) {
     }
 
-    public updateCredentials(password?: string, useCrumbIssuer = true, rejectUnauthorizedCert = true) {
+    public updateCredentials(useCrumbIssuer: boolean, rejectUnauthorizedCert: boolean, password?: string) {
         let urlWithAuth = new url.URL(this.baseUrl);
 
         if (password !== undefined && this.user !== undefined) {
@@ -82,7 +82,7 @@ export default class Jenkins {
             urlWithAuth.username = this.user;
         } else if (this.user === undefined && password === undefined) {
         } else {
-            logger.error("Jenkins instance created with password and no user, or user and no password - need both or none");
+            logger.error("Jenkins credentials updated with password and no user, or user and no password - need both or none");
             throw new Error("invalid arguments");
         }
 
