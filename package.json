@@ -217,6 +217,8 @@
 		"tslint": "5.8.0",
 		"@types/node": "8.10.25",
 		"ts-node": "7.0.1",
-		"@types/xml2js": "0.4.3"
+		"@types/xml2js": "0.4.3",
+		"mocha": "6.1.4",
+		"@types/mocha": "5.2.6"
 	}
 }

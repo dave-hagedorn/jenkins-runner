@@ -30,7 +30,7 @@ const cachedPasswords = new Map<string,string>();
 
 const outputChannel = vscode.window.createOutputChannel(Constants.PLUGIN_FRIENDLY_NAME);
 
-const diagnostics = vscode.languages.createDiagnosticCollection("Jenkins");
+const diagnostics = vscode.languages.createDiagnosticCollection(Constants.PLUGIN_FRIENDLY_NAME);
 
 let statusBarTimer: NodeJS.Timer|undefined;
 
