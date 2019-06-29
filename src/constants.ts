@@ -21,6 +21,8 @@
  */
 
 export default class Constants {
+    static readonly PLUGIN_FULL_NAME = "dave-hagedorn.jenkins-runner";
+    static readonly PLUGIN_NAME = "jenkins-runner";
     static readonly PLUGIN_FRIENDLY_NAME = "Jenkins Runner";
     static readonly STATUS_BAR_IDLE = "$(triangle-right) Jenkins Job...";
     static STATUS_BAR_RUNNING(icon: "file"|"zap", description: string) {

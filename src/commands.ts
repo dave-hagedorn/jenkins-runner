@@ -25,138 +25,98 @@ import Settings, { Job, HostConfig } from "./settings";
 import Jenkins from "./jenkins";
 import * as log from "./log";
 import Constants from "./constants";
+import UI from "./ui";
 
 const cachedPasswords = new Map<string,string>();
 
-const outputChannel = vscode.window.createOutputChannel(Constants.PLUGIN_FRIENDLY_NAME);
-
-const diagnostics = vscode.languages.createDiagnosticCollection(Constants.PLUGIN_FRIENDLY_NAME);
-
-let statusBarTimer: NodeJS.Timer|undefined;
-
-const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
-statusBarIdle();
-
-function statusBarIdle() {
-    statusBar.command = runPipelineScriptOn.name;
-    statusBar.text = Constants.STATUS_BAR_IDLE;
-    statusBar.color = "white";
-    statusBar.tooltip = "Launch Jenkins Job";
-    statusBar.show();
-
-    if (statusBarTimer) {
-        clearInterval(statusBarTimer);
-        statusBarTimer = undefined;
-    }
-}
-
-function statusBarRunning(description: string) {
-    statusBar.command = showPipelineLog.name;
-    statusBar.text = Constants.STATUS_BAR_RUNNING("zap", description);
-    statusBar.color = "white";
-    statusBar.tooltip = "Show Log";
-    statusBar.show();
-
-    let tick = 1;
-    statusBarTimer = setInterval(() => {
-        statusBar.text = Constants.STATUS_BAR_RUNNING(tick % 2 ? "zap" : "file", description);
-        tick++;
-    }, 1000);
-}
-
 async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
-    let pipelineScript = textEditor.document.getText();
+    try {
+        let pipelineScript = textEditor.document.getText();
 
-    let hostDescription = (host: HostConfig) => `${host.friendlyName} - ${host.user ? host.user + "@" : ""}${host.url}`;
+        let hostDescription = (host: HostConfig) => `${host.friendlyName} - ${host.user ? host.user + "@" : ""}${host.url}`;
 
-    let host: HostConfig;
-    if (1 === job.runWith.length) {
-        host = job.runWith[0];
-    } else {
-        let hostChoices = job.runWith.map(hostDescription);
-        let choice = await vscode.window.showQuickPick(hostChoices, {placeHolder:`Pick host to run ${job.friendlyName} on`});
+        let host: HostConfig;
+        if (1 === job.runWith.length) {
+            host = job.runWith[0];
+        } else {
+            let hostChoices = job.runWith.map(hostDescription);
+            let choice = await vscode.window.showQuickPick(hostChoices, {placeHolder:`Pick host to run ${job.friendlyName} on`});
 
-        if (undefined === choice) {
-            return;
-        }
-
-        host = job.runWith[hostChoices.indexOf(choice)];
-    }
-
-    let jenkinsHost = Jenkins.getOrCreateHost(host.url, host.user);
-
-    let password = undefined;
-    if (host.password !== undefined) {
-        password = host.password
-    } else if (host.user !== undefined) {
-        if (!cachedPasswords.has(host.friendlyName)) {
-            let tempPassword = await vscode.window.showInputBox({prompt: `Password for ${hostDescription(host)}`, password: true});
-            if (undefined === tempPassword) {
+            if (undefined === choice) {
                 return;
             }
 
-            cachedPasswords.set(host.friendlyName, tempPassword);
+            host = job.runWith[hostChoices.indexOf(choice)];
         }
-        password = cachedPasswords.get(host.friendlyName);
-    } else {
-        // else, updatePassword still creates internal jenkins object
-        // TODO:  write some unit tests..
-        password = undefined;
-    }
 
-    jenkinsHost.updateCredentials(host.useCrumbIssuer, host.rejectUnauthorizedCert, password);
+        let jenkinsHost = Jenkins.getOrCreateHost(host.url, host.user);
 
+        let password = undefined;
+        if (host.password !== undefined) {
+            password = host.password
+        } else if (host.user !== undefined) {
+            if (!cachedPasswords.has(host.friendlyName)) {
+                let tempPassword = await vscode.window.showInputBox({prompt: `Password for ${hostDescription(host)}`, password: true});
+                if (undefined === tempPassword) {
+                    return;
+                }
 
-    statusBarRunning(`${job.friendlyName} - ${job.name} on ${hostDescription(host)}`);
-    outputChannel.show(true);
-
-    let onDone = async (error?: Error) => {
-        statusBarIdle();
-
-        if (error) {
-            let action = await vscode.window.showErrorMessage(error.message, "Show Logs");
-            if ("Show Logs" === action) {
-                log.showPanel();
+                cachedPasswords.set(host.friendlyName, tempPassword);
             }
+            password = cachedPasswords.get(host.friendlyName);
+        } else {
+            // else, updatePassword still creates internal jenkins object
+            // TODO:  write some unit tests..
+            password = undefined;
         }
 
-        diagnostics.set(textEditor.document.uri, build.errors.map(e => (
-            new vscode.Diagnostic(new vscode.Range(e.line-1, e.column, e.line-1, 1000), e.message, vscode.DiagnosticSeverity.Error)
-            ))
-        );
+        await jenkinsHost.updateCredentials(host.useCrumbIssuer, host.rejectUnauthorizedCert, password);
 
-        build.destroy();
-    };
+        UI.instance.statusBarRunning(showPipelineLog.name, `${job.friendlyName} - ${job.name} on ${hostDescription(host)}`);
+        UI.instance.jobOutputChannel.show(true);
 
-    let build = await jenkinsHost.createPipelineBuild(
-        job.name,
-        pipelineScript,
-        text => outputChannel.append(text),
-        error => onDone(error),
-        job.parameters
-    );
+        let onDone = async (error?: Error) => {
+            UI.instance.statusBarIdle(runPipelineScriptOn.name);
 
-    diagnostics.clear();
-    build.start();
+            if (error) {
+                let action = await UI.instance.showError(error.message);
+            }
+
+            UI.instance.jobDiagnostics.set(textEditor.document.uri, build.errors.map(e => (
+                new vscode.Diagnostic(new vscode.Range(e.line-1, e.column, e.line-1, 1000), e.message, vscode.DiagnosticSeverity.Error)
+                ))
+            );
+
+            build.destroy();
+        };
+
+            let build = await jenkinsHost.createPipelineBuild(
+                job.name,
+                pipelineScript,
+                text => UI.instance.jobOutputChannel.append(text),
+                error => onDone(error),
+                job.parameters
+            );
+
+        UI.instance.jobDiagnostics.clear();
+        build.start();
+
+    } catch (error) {
+        UI.instance.showError(error.message);
+    }
 }
 
 async function getJobs() {
     try {
         let [jobs, warnings] = Settings.jobs;
         if (warnings.length > 0) {
-            let action = await vscode.window.showWarningMessage("Warnings while parsing settings - inspect log", "Show Logs");
-            if ("Show Logs" === action) {
-                log.showPanel();
-            }
+            await UI.instance.showError("Warnings while parsing settings - inspect log");
         } else if (jobs.size === 0) {
-            vscode.window.showErrorMessage("No jobs defined in settings.json")
+            await UI.instance.showError("No jobs defined in settings.json");
         }
         return jobs;
     } catch(err) {
-        let action = await vscode.window.showErrorMessage(`Errors in settings: ${err.message}`, "Show Logs");
-        if ("Show Logs" === action) {
-            log.showPanel();
-        }
+        await UI.instance.showError(`Errors in settings: ${err.message}`);
         return new Map<string, Job>();
     }
 }
@@ -165,13 +125,7 @@ async function checkIfRunning() {
     for (let jenkins of Jenkins.hosts.values()) {
         for (let build of jenkins.builds) {
             if (build.running) {
-                let answer = await vscode.window.showErrorMessage(`${build.description} is already running`, "Stop");
-                if (answer === "Stop") {
-                    build.stop();
-                    // TODO:  race condition between actual stop and start of next job
-                    // once this is fixed, this can return false and auto-start next job
-                    return true;
-                }
+                UI.instance.showError(`${build.description} is already running`, "Stop", ()=>{build.stop();});
                 return true;
             }
         }
@@ -225,7 +179,7 @@ function forgetCachedPasswords() {
 }
 
 function showPipelineLog() {
-    outputChannel.show(true);
+    UI.instance.jobOutputChannel.show(true);
 }
 
 function stopPipelineRun() {
@@ -255,4 +209,6 @@ export default function registerCommands(context: vscode.ExtensionContext) {
     for (let cmd of commands) {
         context.subscriptions.push(vscode.commands.registerCommand(cmd.name, cmd));
     }
+
+    UI.instance.statusBarIdle(runPipelineScriptOn.name);
 }

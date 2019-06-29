@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-export function atPath(obj: any, ...path: string[]): any|undefined {
+export function atPath<T = any|undefined>(obj: any, ...path: string[]): T {
     for (let field of path) {
         obj = obj[field];
         if (undefined === obj) {

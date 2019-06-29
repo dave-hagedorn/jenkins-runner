@@ -25,6 +25,8 @@ import * as vscode from "vscode";
 import * as ajv from "ajv";
 import * as log from "./log";
 import * as utils from "./utils";
+import Constants from "./constants";
+
 const objectAssignDeep = require("object-assign-deep");
 
 export interface HostConfigRaw {
@@ -69,13 +71,11 @@ export default class Settings {
 
         return objectAssignDeep(settings.globalValue, settings.workspaceValue, settings.workspaceFolderValue);
     }
-    private static readonly EXTENSION_NAME = "dave-hagedorn.jenkins-runner";
-
     private static readonly compiledSchemas = new Map<string, ajv.ValidateFunction>();
 
     private static validate(obj: any, property: "hostConfigs"|"jobs") {
         if (!this.compiledSchemas.has(property)) {
-            let ext = vscode.extensions.getExtension(this.EXTENSION_NAME);
+            let ext = vscode.extensions.getExtension(Constants.PLUGIN_FULL_NAME);
 
             if (!ext) {
                 return;
@@ -83,7 +83,7 @@ export default class Settings {
 
             let json = ext.packageJSON;
 
-            let schema = utils.atPath(json, "contributes", "configuration", "properties", `jenkins-runner.${property}`);
+            let schema = utils.atPath(json, "contributes", "configuration", "properties", `${Constants.PLUGIN_NAME}.${property}`);
 
             if (!schema) {
                 this.logger.error("Could not find settings schema in package.json ?!");

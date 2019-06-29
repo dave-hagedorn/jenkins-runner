@@ -21,6 +21,7 @@
  */
 
 import * as vscode from "vscode";
+import UI from "./ui";
 
 import registerCommands from "./commands";
 

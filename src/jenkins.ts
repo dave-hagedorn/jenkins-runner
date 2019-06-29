@@ -74,7 +74,7 @@ export default class Jenkins {
     ) {
     }
 
-    public updateCredentials(useCrumbIssuer: boolean, rejectUnauthorizedCert: boolean, password?: string) {
+    public async updateCredentials(useCrumbIssuer: boolean, rejectUnauthorizedCert: boolean, password?: string) {
         let urlWithAuth = new url.URL(this.baseUrl);
 
         if (password !== undefined && this.user !== undefined) {
@@ -96,6 +96,18 @@ export default class Jenkins {
             crumbIssuer: useCrumbIssuer,
             rejectUnauthorized: rejectUnauthorizedCert,
         });
+
+        await this.testHostConnection();
+    }
+
+    public async testHostConnection() {
+        try {
+            let info = await this.jenkinsInstance.info();
+        } catch (error) {
+            const msg = `Cannot connect to Jenkins host @ ${this.baseUrl}: ${error.message}`;
+            logger.error(msg);
+            throw new Error(msg);
+        }
     }
 
     public async createPipelineBuild(
@@ -106,6 +118,13 @@ export default class Jenkins {
         parameters?: any,
     ) {
         let build = new PipelineBuild(this, this.jenkinsInstance, usingJob, withScript, logHandler, doneHandler, parameters);
+
+        if (!await build.checkIfJobIsPipeline()) {
+            const msg = `Job "${usingJob}" is not a pipeline job - only pipeline (NOT multi-branch, etc.) jobs are supported`
+            logger.error(msg);
+            throw new Error(msg);
+        }
+
         this._builds.push(build);
         return build;
     }
@@ -154,25 +173,39 @@ class PipelineBuild {
         private parameters?: any,
         ) {
         logger.info(`Creating pipeline build using job ${usingJob} @${jenkins.baseUrl}, with params ${parameters}`);
+
     }
 
-    private async updateJobScript(jobName: string, script: string) {
-
+    private async getJobInfo() {
         logger.info(`Fetching remote XML config for job ${this.usingJob} @${this.jenkins.baseUrl}`);
-        let jobXml = await this.jenkinsInstance.job.config(jobName) as string;
+        let jobXml = await this.jenkinsInstance.job.config(this.usingJob) as string;
 
         logger.info("Parsing and updating XML with new pipeline script");
         let parsed = await parseXmlString(jobXml);
 
-        let root = parsed["flow-definition"];
+        return parsed;
+    }
 
-        root.definition[0].script = script;
+    public async checkIfJobIsPipeline() {
+        let jobInfo = await this.getJobInfo();
+
+        let plugin = utils.atPath<string|undefined>(jobInfo, "flow-definition", "$", "plugin");
+
+        return plugin && plugin.startsWith("workflow-job");
+    }
+
+    private async updateJobScript() {
+        let jobInfo = await this.getJobInfo();
+
+        let root = jobInfo["flow-definition"];
+
+        root.definition[0].script = this.withScript;
         root.quietPeriod = 0; // make sure job starts right away
 
-        jobXml = new xml2js.Builder().buildObject(parsed);
+        let asXml = new xml2js.Builder().buildObject(jobInfo);
 
         logger.info(`Pushing remote XML config for job ${this.usingJob} @${this.jenkins.baseUrl}`);
-        await this.jenkinsInstance.job.config(jobName, jobXml);
+        await this.jenkinsInstance.job.config(this.usingJob, asXml);
     }
 
     private async postDone(error?: Error) {
@@ -201,7 +234,7 @@ class PipelineBuild {
         }
 
         try {
-            await this.updateJobScript(this.usingJob, this.withScript);
+            await this.updateJobScript();
 
             logger.info(`Fetching next job number job ${this.usingJob} @${this.jenkins.baseUrl}`);
             // TODO:  Race condition - this requires that no other build starts between now and the below line !!!
