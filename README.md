@@ -106,6 +106,51 @@ Any cached passwords can be reset/forgotten using the `Forget Temporary Password
 
 Lastly, extension debug logs are written to the `Jenkins Runner - Debug Log` output console.
 
+# FAQ
+
+## Are other job types (Multi-Branch, etc.) supported?
+
+Not currently.
+
+Pipeline jobs store the pipeline script in the job's config, on Jenkins.
+This is how this plugin updates the job's pipeline script - using Jenkins APIs to update the job's config.
+
+Multi-branch pipeline jobs can only source their pipeline scripts from a Jenkinsfile stored in SCM - so there's no way for this plugin to update the job's pipeline script.
+
+As a workaround, you can create a pipeline script that checks out your repo and branch for you:
+
+```groovy
+checkout(
+    [
+        $class: 'GitSCM', branches: [
+            [name: '*/master']
+        ],
+        doGenerateSubmoduleConfigurations: false,
+        extensions: [],
+        submoduleCfg: [],
+        userRemoteConfigs: [
+            [url: 'https://my-repo']
+        ]
+    ]
+)
+
+// remaining pipeline steps that are normally in your repo's Jenkinsfile
+```
+
+## How do I reference a job in a folder?
+
+Set the job's `name` as `folder_path/job_name`.
+
+Ex, for a job named `test-` in the folder `tests`:
+
+```json
+"jenkins-runner.jobs": {
+    "test-1": {
+        "runWith": "local",
+        "name": "tests/test-1",
+    },
+```
+
 # Features
 
 ## Parameter Support

@@ -120,7 +120,7 @@ export default class Jenkins {
         let build = new PipelineBuild(this, this.jenkinsInstance, usingJob, withScript, logHandler, doneHandler, parameters);
 
         if (!await build.checkIfJobIsPipeline()) {
-            const msg = `Job "${usingJob}" is not a pipeline job - only pipeline (NOT multi-branch, etc.) jobs are supported`
+            const msg = `Job "${usingJob}" is not a pipeline job - only pipeline (NOT multi-branch, etc.) jobs are supported`;
             logger.error(msg);
             throw new Error(msg);
         }
