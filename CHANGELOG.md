@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - March 8 2020
+### Fixed 
+- Update jenkins dependency to fix crumbs [#16 - No valid crumb was included in the request](https://github.com/dave-hagedorn/jenkins-runner/issues/16)
+
 ## [1.2.2] - May 19 2019
 ### Fixed
 - Related to [#5 - Need ability to use/not use crumbIssuer CSRF protection](https://github.com/dave-hagedorn/jenkins-runner/issues/5).  crumbIssuer config was not used for all user+password combinations in host settings
