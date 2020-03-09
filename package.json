@@ -3,7 +3,7 @@
 	"name": "jenkins-runner",
 	"displayName": "Jenkins Runner",
 	"description": "Develop and run Jenkins pipeline scripts from within vs code",
-	"version": "1.2.2",
+	"version": "1.2.3",
 	"homepage": "https://github.com/dave-hagedorn/jenkins-runner/blob/master/README.md",
 	"icon": "images/icon.png",
 	"galleryBanner": {
@@ -207,7 +207,7 @@
 	},
 	"dependencies": {
 		"ajv": "6.9.1",
-		"jenkins": "0.23.0",
+		"jenkins": "0.27.0",
 		"object-assign-deep": "0.4.0",
 		"xml2js": "0.4.19"
 	},
