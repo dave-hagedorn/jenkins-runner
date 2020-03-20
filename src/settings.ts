@@ -33,6 +33,7 @@ export interface HostConfigRaw {
     password?: string;
     useCrumbIssuer?: boolean;
     rejectUnauthorizedCert?: boolean;
+    clearOutput?: boolean;
 }
 
 export interface HostConfig {
@@ -42,6 +43,7 @@ export interface HostConfig {
     password?: string;
     useCrumbIssuer: boolean;
     rejectUnauthorizedCert: boolean;
+    clearOutput?: boolean;
 }
 
 interface JobRaw {
@@ -127,6 +129,7 @@ export default class Settings {
                 friendlyName: name,
                 useCrumbIssuer: rawHost.useCrumbIssuer || true,
                 rejectUnauthorizedCert: rawHost.rejectUnauthorizedCert || true,
+                clearOutput: rawHost.clearOutput || false,
                 ...rawHost
             },
         ]));
