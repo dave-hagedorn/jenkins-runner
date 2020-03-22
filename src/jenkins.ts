@@ -166,6 +166,11 @@ class PipelineBuild {
 
         let root = parsed["flow-definition"];
 
+        // Issue #14 - can't repro, but this may fix
+        if (root.definition == undefined) {
+            root.definition = [{}];
+        }
+
         root.definition[0].script = script;
         root.quietPeriod = 0; // make sure job starts right away
 
