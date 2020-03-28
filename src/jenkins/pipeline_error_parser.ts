@@ -20,31 +20,43 @@
  * SOFTWARE.
  */
 
+const RE_GROOVY_ERRORS = [
+    /*
+    WorkflowScript: 9: expecting ''', found '\n' @ line 9, column 32.
+                    echo '"$Person"
+                                    ^
+    */
+    /^(?<path>[^:]+):(?<line>[^:]+):(?<message>[^@]+) @ line \d+, column (?<column>\d+)/,
 
-/*
-WorkflowScript: 9: expecting ''', found '\n' @ line 9, column 32.
-                   echo '"$Person"
-                                  ^
-*/
-const RE_GROOVY_ERROR = /^([^:]+):([^:]+):([^@]+) @ line \d+, column (\d+)/;
+    /*
+    at WorkflowScript.run(WorkflowScript:2)
+    */
+    /.*WorkflowScript.run\((?<path>[^:]+):(?<line>\d+)\).*/,
+];
 
 export interface GroovyError {
     path: string;
     line: number;
-    column: number;
-    message: string;
+    column?: number;
+    message?: string;
 }
 
 export function parseGroovyErrors(text: string) {
     let errors: GroovyError[] = [];
 
     for (let line of text.split("\n")) {
-        let match = RE_GROOVY_ERROR.exec(line);
-        if (match) {
-            let [_, path, line, message, column] = match;
-            errors.push({path, message, line: Number.parseInt(line), column: Number.parseInt(column)});
+        for (let re of RE_GROOVY_ERRORS) {
+            let match = re.exec(line) as null|{groups: {path: string, line: string, column?: string, message?: string}};
+            if (match !== null) {
+                errors.push({
+                    path: match.groups.path,
+                    message: match.groups.message,
+                    line: Number.parseInt(match.groups.line),
+                    column: match.groups.column ? Number.parseInt(match.groups.column) : undefined,
+                });
+            }
         }
     }
 
     return errors;
- }
+}

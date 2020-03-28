@@ -20,16 +20,6 @@
  * SOFTWARE.
  */
 
-export function atPath(obj: any, ...path: string[]): any|undefined {
-    for (let field of path) {
-        obj = obj[field];
-        if (undefined === obj) {
-            break;
-        }
-    }
-    return obj;
-}
-
 export function toArray<T>(singleOrArray: T|T[]): T[] {
     if (singleOrArray instanceof Array) {
         return singleOrArray;

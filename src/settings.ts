@@ -29,7 +29,7 @@ import * as utils from "./utils";
 
 const objectAssignDeep = require("object-assign-deep");
 
-export interface HostConfigRaw {
+interface HostConfigRaw {
     url: string;
     user?: string;
     password?: string;
@@ -51,6 +51,7 @@ interface JobRaw {
     runWith: string|string[];
     name: string;
     parameters?: any;
+    environment?: any;
 }
 
 export interface Job {
@@ -59,6 +60,7 @@ export interface Job {
     runWith: HostConfig[];
     name: string;
     parameters?: any;
+    environment?: any;
 }
 
 export default class Settings {
@@ -85,7 +87,7 @@ export default class Settings {
 
             let json = ext.packageJSON;
 
-            let schema = utils.atPath(json, "contributes", "configuration", "properties", `jenkins-runner.${property}`);
+            let schema = json?.contributes?.configuration?.properties?.[`jenkins-runner.${property}`];
 
             if (!schema) {
                 this.logger.error("Could not find settings schema in package.json ?!");
@@ -175,6 +177,7 @@ export default class Settings {
                         runWith: foundConfigs as HostConfig[],
                         name: rawJob.name,
                         parameters: rawJob.parameters,
+                        environment: rawJob.environment,
                 });
         }
 

@@ -21,10 +21,11 @@
  */
 
 import * as vscode from "vscode";
-import Settings, { Job, HostConfig } from "./settings";
-import Jenkins from "./jenkins";
-import * as log from "./log";
+
 import Constants from "./constants";
+import Jenkins from "./jenkins/jenkins";
+import * as log from "./log";
+import Settings, { HostConfig, Job } from "./settings";
 
 const cachedPasswords = new Map<string,string>();
 
@@ -124,7 +125,7 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
         }
 
         diagnostics.set(textEditor.document.uri, build.errors.map(e => (
-            new vscode.Diagnostic(new vscode.Range(e.line-1, e.column, e.line-1, 1000), e.message, vscode.DiagnosticSeverity.Error)
+            new vscode.Diagnostic(new vscode.Range(e.line-1, e.column ?? 0, e.line-1, 1000), e.message ?? "Unknown error", vscode.DiagnosticSeverity.Error)
             ))
         );
 
@@ -136,7 +137,8 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
         pipelineScript,
         text => outputChannel.append(text),
         error => onDone(error),
-        job.parameters
+        job.parameters,
+        job.environment,
     );
 
     diagnostics.clear();
