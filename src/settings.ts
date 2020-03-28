@@ -21,10 +21,12 @@
  */
 
 
-import * as vscode from "vscode";
 import * as ajv from "ajv";
+import * as vscode from "vscode";
+
 import * as log from "./log";
 import * as utils from "./utils";
+
 const objectAssignDeep = require("object-assign-deep");
 
 export interface HostConfigRaw {
@@ -33,7 +35,6 @@ export interface HostConfigRaw {
     password?: string;
     useCrumbIssuer?: boolean;
     rejectUnauthorizedCert?: boolean;
-    clearOutput?: boolean;
 }
 
 export interface HostConfig {
@@ -43,7 +44,6 @@ export interface HostConfig {
     password?: string;
     useCrumbIssuer: boolean;
     rejectUnauthorizedCert: boolean;
-    clearOutput?: boolean;
 }
 
 interface JobRaw {
@@ -113,6 +113,13 @@ export default class Settings {
 
     private static readonly logger = new log.Logger("Settings");
 
+    public static get clearOutputOnRun(): boolean {
+        return vscode.workspace.getConfiguration("jenkins-runner").get<boolean>("clearOutputOnRun")
+        ??
+        vscode.workspace.getConfiguration("jenkins-runner").inspect<boolean>("clearOutputOnRun")?.defaultValue
+        ??
+        false;
+    }
 
     public static get hosts(): Map<string, HostConfig> {
         let hosts = this.config<{[name:string]: HostConfigRaw}>("hostConfigs");
@@ -129,7 +136,6 @@ export default class Settings {
                 friendlyName: name,
                 useCrumbIssuer: rawHost.useCrumbIssuer || true,
                 rejectUnauthorizedCert: rawHost.rejectUnauthorizedCert || true,
-                clearOutput: rawHost.clearOutput || false,
                 ...rawHost
             },
         ]));
