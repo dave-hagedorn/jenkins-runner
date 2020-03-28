@@ -1,5 +1,7 @@
 {
 	"rules": {
+		"ordered-imports": true,
+		"no-duplicate-imports": true,
 		"no-string-throw": true,
 		"no-unused-expression": true,
 		"no-duplicate-variable": true,
