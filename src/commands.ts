@@ -108,7 +108,7 @@ async function runPipelineScriptOnJob(textEditor: vscode.TextEditor, job: Job) {
 
 
     statusBarRunning(`${job.friendlyName} - ${job.name} on ${hostDescription(host)}`);
-    if (host.clearOutput) {
+    if (Settings.clearOutputOnRun) {
         outputChannel.clear();
     }
     outputChannel.show(true);

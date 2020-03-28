@@ -65,6 +65,11 @@
 		"configuration": {
 			"title": "Jenkins Runner",
 			"properties": {
+				"jenkins-runner.clearOutputOnRun": {
+					"type": "boolean",
+					"default": "false",
+					"description": "Clear Jenkins console output on each run"
+				},
 				"jenkins-runner.hostConfigs": {
 					"type": "object",
 					"description": "Jenkins hosts and their credentials",
@@ -212,13 +217,12 @@
 		"xml2js": "0.4.19"
 	},
 	"devDependencies": {
-		"typescript": "3.3.3",
-		"vscode": "1.1.25",
-		"tslint": "5.8.0",
-		"@types/node": "8.10.25",
-		"ts-node": "7.0.1",
+		"@types/mocha": "5.2.6",
+		"@types/node": "13.9.3",
 		"@types/xml2js": "0.4.3",
 		"mocha": "6.1.4",
-		"@types/mocha": "5.2.6"
+		"ts-node": "7.0.1",
+		"typescript": "3.8.3",
+		"vscode": "1.1.25"
 	}
 }
