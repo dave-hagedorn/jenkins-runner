@@ -22,11 +22,12 @@
 
 const jenkins = require("jenkins");
 import * as url from "url";
-import * as xml2js from "xml2js";
 import * as util from "util";
+import * as xml2js from "xml2js";
+
+import * as log from "../log";
+import * as envinjectPlugin from "./envinjectPlugin";
 import { GroovyError, parseGroovyErrors } from "./pipeline_error_parser";
-import * as log from "./log";
-import * as utils from "./utils";
 
 const timeout = util.promisify(setTimeout);
 
@@ -40,9 +41,7 @@ export default class Jenkins {
     private jenkinsInstance: any;
     private _builds: PipelineBuild[] = [];
 
-    private static readonly TAG = "Jenkins";
-
-    private static _hosts = new Map<string,Jenkins>();
+    private static _hosts = new Map<string, Jenkins>();
 
     public static getOrCreateHost(baseUrl: string, user?: string) {
         let key = `${baseUrl}-${user}`;
@@ -55,7 +54,7 @@ export default class Jenkins {
     }
 
     public static get hosts() {
-        return this._hosts as ReadonlyMap<string,Jenkins>;
+        return this._hosts as ReadonlyMap<string, Jenkins>;
     }
 
     public get builds() {
@@ -98,14 +97,22 @@ export default class Jenkins {
         });
     }
 
+    public async envinjectPluginVersion(): Promise<string | undefined> {
+        // https://www.npmjs.com/package/jenkins#jenkinspluginlistcallback
+        let plugins = await this.jenkinsInstance.plugin.list() as [{ shortName: string, version: string }];
+
+        return plugins.find(e => e.shortName === envinjectPlugin.SHORT_NAME)?.version;
+    }
+
     public async createPipelineBuild(
         usingJob: string,
         withScript: string,
         logHandler: LogHandler,
         doneHandler: DoneHandler,
         parameters?: any,
+        environment?: any,
     ) {
-        let build = new PipelineBuild(this, this.jenkinsInstance, usingJob, withScript, logHandler, doneHandler, parameters);
+        let build = new PipelineBuild(this, this.jenkinsInstance, usingJob, withScript, logHandler, doneHandler, parameters, environment);
         this._builds.push(build);
         return build;
     }
@@ -126,9 +133,7 @@ class PipelineBuild {
     private _errors: GroovyError[] = [];
     private buildLog = "";
 
-    private state: "running"|"stopped" = "stopped";
-
-    private static readonly TAG = "PipelineBuild";
+    private state: "running" | "stopped" = "stopped";
 
     private logStream: any;
 
@@ -152,12 +157,12 @@ class PipelineBuild {
         private logHandler: LogHandler,
         private doneHandler?: DoneHandler,
         private parameters?: any,
-        ) {
+        private environment?: any,
+    ) {
         logger.info(`Creating pipeline build using job ${usingJob} @${jenkins.baseUrl}, with params ${parameters}`);
     }
 
     private async updateJobScript(jobName: string, script: string) {
-
         logger.info(`Fetching remote XML config for job ${this.usingJob} @${this.jenkins.baseUrl}`);
         let jobXml = await this.jenkinsInstance.job.config(jobName) as string;
 
@@ -169,6 +174,17 @@ class PipelineBuild {
         // Issue #14 - can't repro, but this may fix
         if (root.definition === undefined) {
             root.definition = [{}];
+        }
+
+        logger.info(`Environment for job: ${JSON.stringify(this.environment)}`);
+        if (this.environment !== undefined) {
+            let envinjectPluginVersion = await this.jenkins.envinjectPluginVersion();
+            if (envinjectPluginVersion === undefined) {
+                let msg = `Jenkins instance @${this.jenkins.baseUrl} does not have the envinject plugin installed - cannot use set environment variables for this job`;
+                logger.error(msg);
+                throw new Error(msg);
+            }
+            Object.assign(root.properties[0], await envinjectPlugin.createXmlConfig(envinjectPluginVersion, this.environment));
         }
 
         root.definition[0].script = script;
@@ -214,6 +230,7 @@ class PipelineBuild {
             logger.info(`Next job number: ${this.buildNumber}`);
 
             logger.info(`Starting build #${this.buildNumber} of job ${this.usingJob} @${this.jenkins.baseUrl}`);
+            logger.info(`Parameters: ${JSON.stringify(this.parameters)}`);
             await this.jenkinsInstance.job.build({
                 name: this.usingJob,
                 parameters: this.parameters,
@@ -227,7 +244,7 @@ class PipelineBuild {
                     logger.info(`Trying to fetch build #${this.buildNumber}...`);
                     build = await this.jenkinsInstance.build.get(this.usingJob, this.buildNumber);
                     break;
-                } catch(error) {
+                } catch (error) {
                     logger.warn(`Build probably not started yet, will try again...`);
                     await timeout(100);
                 }
@@ -249,7 +266,7 @@ class PipelineBuild {
             this.state = "running";
         } catch (error) {
             logger.error(`Error starting job ${this.usingJob} #${this.buildNumber} @${this.jenkins.baseUrl}}: ${error}`);
-            let detailed = utils.atPath(error, "res", "body");
+            let detailed = error?.res?.body;
             if (detailed) {
                 logger.error(detailed);
             }

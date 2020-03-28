@@ -177,6 +177,28 @@
 											]
 										}
 									}
+								},
+								"environment": {
+									"description": "Map of environment variables and their values to use when running this job.  Requires envinject plugin to be installed on Jenkins",
+									"type": "object",
+									"patternProperties": {
+										".+": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "boolean"
+												},
+												{
+													"type": "number"
+												},
+												{
+													"type": "integer"
+												}
+											]
+										}
+									}
 								}
 							}
 						}
@@ -212,7 +234,7 @@
 	},
 	"dependencies": {
 		"ajv": "6.9.1",
-		"jenkins": "0.27.0",
+		"jenkins": "0.28.0",
 		"object-assign-deep": "0.4.0",
 		"xml2js": "0.4.19"
 	},
