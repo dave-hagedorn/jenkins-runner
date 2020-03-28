@@ -46,13 +46,13 @@ Assuming the host requires authentication, the `user` field is provided.  `passw
 
 If `password` is omitted, you will be prompted once per user, per VS Code session, for that user's password.  This password is then cached until VS Code is closed, or until the `Forget temporary passwords` command is invoked.
 
-## Add Jobs & Their Parameters
+## Add Jobs & Their Parameters, Environments
 
 The extension also needs to know which Jenkins job(s) you will use to actually run a Jenkins script.  These are configured through the `jenkins-runner.jobs` property in user settings.  This is a map of friendly names (used for VS Code menus/UI) to job configs:
 
 ⚠ ⚠ ⚠
 
-The Jenkins-side configuration of a job will be over-written by this extension.  Suggest using a scratch/test job.
+The Jenkins-side Pipeline script of the job will be over-written by this extension.  Suggest using a scratch/test job.
 
 ⚠ ⚠ ⚠
 
@@ -68,6 +68,10 @@ The Jenkins-side configuration of a job will be over-written by this extension. 
         "name": "test-pipeline",
         "parameters": {
             "message": "Hello World!"
+        },
+        "environment": {
+            "HOST_NAME": "localhost",
+            "CPU_COUNT": 3
         }
     }
 }
@@ -82,6 +86,13 @@ The following field are optional:
 
 * `isDefault` - this should be set for at most one job.  This job is used by the `Run Pipeline Script on Default Job` command.  This saves you needing to chose a job every time you want to run a script - as would be done when using the `Run Pipeline Script On...` command
 * `parameters` - a dictionary of the parameters configured for this job
+* `environment` - same as `parameters`, but injects these into the job as environment variables (`env.VAR`).  Requires the [envinject](https://plugins.jenkins.io/envinject/) plugin be installed on Jenkins)
+
+⚠ ⚠ ⚠
+
+ALL envinject properties for the job will be over-written by this plugin.
+
+⚠ ⚠ ⚠
 
 ## Jenkins Setup
 
@@ -108,13 +119,13 @@ Lastly, extension debug logs are written to the `Jenkins Runner - Debug Log` out
 
 # Features
 
-## Parameter Support
+## Parameter and Environment Variable Support
 
-Each job configuration supports arbitrary build parameters.
+Each job configuration supports arbitrary build parameters and environment variables.
 
 ![Parameters Config](images/parameters.png)
 
-You can add multiple job configurations to test a script against different sets of parameters
+You can add multiple job configurations to test a script against different sets of parameters and/or environment variables
 
 ## Multiple jobs & Hosts
 
