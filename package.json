@@ -236,7 +236,7 @@
 		"test": "npm run compile && node ./node_modules/vscode/bin/test"
 	},
 	"dependencies": {
-		"ajv": "6.9.1",
+		"ajv": "6.12.3",
 		"jenkins": "0.28.0",
 		"object-assign-deep": "0.4.0",
 		"xml2js": "0.4.19"
